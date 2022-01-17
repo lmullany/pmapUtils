@@ -1,0 +1,14 @@
+pandas
+scikit-learn
+sqlalchemy>=1.4
+pyyaml
+pyodbc
+matplotlib
+plotly
+tqdm
+pytest
+pytest-cov
+#sphinx
+#sphinx-tabs
+datatable
+
