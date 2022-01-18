@@ -142,6 +142,8 @@ class EngineWrapper:
 
 
 default_engine = EngineWrapper(dbname = available_dbs()["WSP"])
+vte_default_engine = EngineWrapper(dbname = available_dbs()["VTE"])
+wsp_default_engine = EngineWrapper(dbname = available_dbs()["WSP"])
 
 
 # def construct_table_query(
