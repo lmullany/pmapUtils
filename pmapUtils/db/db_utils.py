@@ -30,6 +30,7 @@ def available_dbs():
     return {
         'VTE':'PatientSafetyQualityVTE_Projection',
         'WSP' : 'PatientSafetyQualityWSP_Projection',
+        'MA':'PatientSafetyQualityMA_Projection',
         'camp' :  'CAMP_PMCoE_Projection'
     }
 
@@ -144,6 +145,7 @@ class EngineWrapper:
 default_engine = EngineWrapper(dbname = available_dbs()["WSP"])
 vte_default_engine = EngineWrapper(dbname = available_dbs()["VTE"])
 wsp_default_engine = EngineWrapper(dbname = available_dbs()["WSP"])
+ma_default_engine = EngineWrapper(dbname = available_dbs()["MA"])
 
 
 # def construct_table_query(
