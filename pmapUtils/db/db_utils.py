@@ -55,8 +55,12 @@ def get_connection_str(
         user = input('Username: ')
     else:
         user = kwargs.get("user")
-        
-    passwd = getpass.getpass('Password for ' + user + ': ')
+   
+    if 'passwd' not in kwargs:
+        passwd = getpass.getpass('Password for ' + user + ': ')
+    else:
+        passwd = kwargs.get("passwd")
+   
     user = "win\\" + user
 
     acceptable_servers = ["ESMPMDBPR4.WIN.AD.JHU.EDU"]
