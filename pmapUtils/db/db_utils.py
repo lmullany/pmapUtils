@@ -532,6 +532,7 @@ def create_temp_table_values(
 def create_temp_table_query(
     query,
     temp_table_name=None,
+    pk_cols=None,
     engine=default_engine,
 ):
     """Places the result of a submitted query into a local temporary table on the database
@@ -557,10 +558,21 @@ def create_temp_table_query(
         raise TypeError(
             r"'query' argument is Selectable, but columns collection is empty".format()
         )
+        
+    def get_col_def(c,pk_cols):
+        if c.name in pk_cols:
+            return sqlalchemy.Column(c.key, c.type, primary_key=True)
+        else:
+            return sqlalchemy.Column(c.key,c.type)
+        
+    if pk_cols is None:
+        col_defs= [sqlalchemy.Column(c.key, c.type) for c in columns]
+    else:
+        col_defs = [get_col_def(c, pk_cols) for c in columns]
 
     table = make_temporary_table(
         sqlalchemy.MetaData(bind=engine.connection),
-        *[sqlalchemy.Column(c.key, c.type) for c in columns],
+        *col_defs,
         name=temp_table_name,
         engine=engine,
     )
