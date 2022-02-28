@@ -559,16 +559,13 @@ def create_temp_table_query(
             r"'query' argument is Selectable, but columns collection is empty".format()
         )
         
-    def get_col_def(c,pk_cols):
-        if c.name in pk_cols:
+    def get_col_def(c,pk_cols=None):
+        if pk_cols is not None and c.name in pk_cols:
             return sqlalchemy.Column(c.key, c.type, primary_key=True)
         else:
             return sqlalchemy.Column(c.key,c.type)
         
-    if pk_cols is None:
-        col_defs= [sqlalchemy.Column(c.key, c.type) for c in columns]
-    else:
-        col_defs = [get_col_def(c, pk_cols) for c in columns]
+    col_defs = [get_col_def(c, pk_cols) for c in columns]
 
     table = make_temporary_table(
         sqlalchemy.MetaData(bind=engine.connection),
