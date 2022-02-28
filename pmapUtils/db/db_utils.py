@@ -472,15 +472,21 @@ def _get_column_sql_type(column: pd.Series):
 
 
 def make_temporary_table_from_pandas(
-    df, *, engine: EngineWrapper, name=None, metadata=None
+    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None
 ) -> sqlalchemy.Table:
+    
+    def get_col_def(cname,col,pk_cols=None):
+        if pk_cols is not None and cname in pk_cols:
+            return sqlalchemy.Column(cname, _get_column_sql_type(col), primary_key=True)
+        else:
+            return sqlalchemy.Column(cname, _get_column_sql_type(col))
+        
+    col_defs = [get_col_def(c,df[c], pk_cols) for c in df]
+    
     metadata = metadata if metadata is not None else sqlalchemy.MetaData()
     table = make_temporary_table(
         metadata,
-        *[
-            sqlalchemy.Column(column_name, _get_column_sql_type(df[column_name]))
-            for column_name in df
-        ],
+        *col_defs,
         name=name,
         engine=engine,
     )
@@ -559,16 +565,13 @@ def create_temp_table_query(
             r"'query' argument is Selectable, but columns collection is empty".format()
         )
         
-    def get_col_def(c,pk_cols):
-        if c.name in pk_cols:
+    def get_col_def(c,pk_cols=None):
+        if pk_cols is not None and c.name in pk_cols:
             return sqlalchemy.Column(c.key, c.type, primary_key=True)
         else:
             return sqlalchemy.Column(c.key,c.type)
         
-    if pk_cols is None:
-        col_defs= [sqlalchemy.Column(c.key, c.type) for c in columns]
-    else:
-        col_defs = [get_col_def(c, pk_cols) for c in columns]
+    col_defs = [get_col_def(c, pk_cols) for c in columns]
 
     table = make_temporary_table(
         sqlalchemy.MetaData(bind=engine.connection),
