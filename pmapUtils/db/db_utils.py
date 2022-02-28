@@ -472,15 +472,21 @@ def _get_column_sql_type(column: pd.Series):
 
 
 def make_temporary_table_from_pandas(
-    df, *, engine: EngineWrapper, name=None, metadata=None
+    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None
 ) -> sqlalchemy.Table:
+    
+    def get_col_def(cname,col,pk_cols=None):
+        if pk_cols is not None and cname in pk_cols:
+            return sqlalchemy.Column(cname, _get_column_sql_type(col), primary_key=True)
+        else:
+            return sqlalchemy.Column(cname, _get_column_sql_type(col))
+        
+    col_defs = [get_col_def(c,df[c], pk_cols) for c in df]
+    
     metadata = metadata if metadata is not None else sqlalchemy.MetaData()
     table = make_temporary_table(
         metadata,
-        *[
-            sqlalchemy.Column(column_name, _get_column_sql_type(df[column_name]))
-            for column_name in df
-        ],
+        *col_defs,
         name=name,
         engine=engine,
     )
