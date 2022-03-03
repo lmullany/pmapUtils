@@ -152,65 +152,6 @@ wsp_default_engine = EngineWrapper(dbname = available_dbs()["WSP"])
 ma_default_engine = EngineWrapper(dbname = available_dbs()["MA"])
 
 
-# def construct_table_query(
-#     schema: str,
-#     table: str,
-#     columns: List[str] = (),
-#     datetime_cols: List[str] = (
-#         "CRNT_HRG_RQSTD_DT",
-#         "SRC_SYS_INSRT_TS",
-#         "OWNR_STUS_STDT",
-#         "STUS_STDT",
-#         "STUS_ENDT",
-#     ),
-#     max_rows: Optional[int] = None,
-#     filter_condition: str = "",
-#     order_condition: str = "",
-#     engine=default_engine,
-# ):
-#     """Creates a custom singe table query string based on arguments
-#
-#     Args:
-#         schema (str): database schema
-#         table (str): database table
-#         columns (list of str): columns of table to include
-#         datetime_cols: columns of a table to convert to datetime within the query itself.
-#             This speeds up things on the pandas side.
-#         max_rows (int): maximum # of rows to include
-#         filter_condition (str): string representing 'WHERE' clause of a query
-#                             (Ex: 'CLM_UID > 1000 and CLM_UID < 2000 and CLMT_YOB > 1975')
-#                             (Ex: 'OWNR_OCD == \'X43\'')
-#                             (Note:  filter_condition columns must be represented in "column" argument)
-#         order_condition: string representing the "ORDER BY" clause of a query
-#
-#     Returns:
-#         str: a query string
-#     """
-#     table = load_table_definition(schema, table, engine)
-#
-#     max_rows_str: str = ""
-#     if max_rows:
-#         max_rows_str = "TOP ({})".format(max_rows)
-#
-#     if len(datetime_cols) != 0 and len(columns) != 0:
-#         columns = [
-#             col if col not in datetime_cols else f"{col} = CONVERT(DATETIME,{col})"
-#             for col in columns
-#         ]
-#
-#     if len(columns) == 0:
-#         query = f"SELECT {max_rows_str} * FROM [{schema}].[{table}] "
-#     else:
-#         query = f"SELECT {max_rows_str} {','.join(columns)} FROM [{schema}].[{table}] "
-#
-#     if filter_condition != "":
-#         query += "WHERE " + filter_condition + " "
-#
-#     if order_condition != "":
-#         query += f"ORDER BY {order_condition}"
-#
-#     return query
-
 
 ########################################################################################################
 # DATABASE UTILITIES
@@ -224,7 +165,7 @@ def glimpse(selectable,engine, size=6):
 
 def count(selectable,engine):
     stmt = (
-        sqlalchemy.select([sqlalchemy.func.count().label("N")])
+        sqlalchemy.select([sqlalchemy.func.count(selectable.columns[0]).label("N")])
         .select_from(selectable)
     )
     return query_db(stmt,engine=engine)["N"][0]
