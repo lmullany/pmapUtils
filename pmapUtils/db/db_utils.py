@@ -163,12 +163,23 @@ def glimpse(selectable,engine, size=6):
     stmt = sqlalchemy.select(selectable).limit(size)
     return query_db(stmt,engine=engine)
 
-def count(selectable,engine):
-    stmt = (
-        sqlalchemy.select([sqlalchemy.func.count(selectable.columns[0]).label("N")])
-        .select_from(selectable)
-    )
-    return query_db(stmt,engine=engine)["N"][0]
+def count(selectable,engine, by=None):
+    if by is not None:
+        stmt = (
+            sqlalchemy.select(*[selectable.c[b] for b in by],
+                              sqlalchemy.func.count().label("N"))
+            .group_by(*[selectable.c[b] for b in by])
+            .alias()
+        )
+        return query_db(stmt,engine=engine)
+                      
+        
+    else:
+        stmt = (
+            sqlalchemy.select([sqlalchemy.func.count(selectable.columns[0]).label("N")])
+            .select_from(selectable)
+        )
+        return query_db(stmt,engine=engine)["N"][0]
         
 
 def random_name(length=16, self_seed=True):
