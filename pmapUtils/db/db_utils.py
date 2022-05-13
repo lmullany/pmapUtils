@@ -424,7 +424,7 @@ def _get_column_sql_type(column: pd.Series):
 
 
 def make_temporary_table_from_pandas(
-    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None
+    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None, fixnan=True
 ) -> sqlalchemy.Table:
     
     def get_col_def(cname,col,pk_cols=None):
@@ -432,6 +432,15 @@ def make_temporary_table_from_pandas(
             return sqlalchemy.Column(cname, _get_column_sql_type(col), primary_key=True)
         else:
             return sqlalchemy.Column(cname, _get_column_sql_type(col))
+        
+    def get_sqlalchemy_insertable(df,fixnan=True):
+        k = list(df.to_dict("index").values())
+        cols = df.select_dtypes("number").columns
+        for i in range(len(k)):
+            for j in cols:
+                if pd.isna(k[i][j]):
+                    k[i][j] = sqlalchemy.null()
+        return k
         
     col_defs = [get_col_def(c,df[c], pk_cols) for c in df]
     
@@ -443,7 +452,12 @@ def make_temporary_table_from_pandas(
         engine=engine,
     )
     table.create(bind=engine.connection)
-    engine.session.execute(table.insert().values(list(df.to_dict("index").values())))
+    
+    # get insertable values
+    insertable_values = get_sqlalchemy_insertable(df,fixnan=fixnan)
+    
+    # insert the values
+    engine.session.execute(table.insert().values(insertable_values))
     return table
 
 
