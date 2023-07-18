@@ -8,7 +8,5 @@ plotly
 tqdm
 pytest
 pytest-cov
-#sphinx
-#sphinx-tabs
 datatable
 
