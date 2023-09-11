@@ -424,9 +424,13 @@ def _get_column_sql_type(column: pd.Series):
 
 
 def make_temporary_table_from_pandas(
-    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None, fixnan=True
+    df, *, pk_cols = None, engine: EngineWrapper, name=None, metadata=None, fixnan=True, rowchunks=None
 ) -> sqlalchemy.Table:
     
+    if rowchunks is None:
+        rowchunks = df.shape[0]
+        
+        
     def get_col_def(cname,col,pk_cols=None):
         if pk_cols is not None and cname in pk_cols:
             return sqlalchemy.Column(cname, _get_column_sql_type(col), primary_key=True)
@@ -457,7 +461,10 @@ def make_temporary_table_from_pandas(
     insertable_values = get_sqlalchemy_insertable(df,fixnan=fixnan)
     
     # insert the values
-    engine.session.execute(table.insert().values(insertable_values))
+    while insertable_values:
+        iv_chunk, insertable_values = insertable_values[:rowchunks], insertable_values[rowchunks:]
+        engine.session.execute(table.insert().values(iv_chunk))
+        
     return table
 
 
